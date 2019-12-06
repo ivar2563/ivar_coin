@@ -11,15 +11,18 @@ mutex = Lock()
 def recurseJsonUpdate(target, source):
     ret = {}
     for key, element in source.items():
-        if isinstance(element, dict):
-            if key in target:
-                if isinstance(target[key], dict):
-                    ret[key] = recurseJsonUpdate(target[key], source[key])
+        if key != "data":
+            pass
+        if key == "data":
+            if isinstance(element, dict):
+                if key in target:
+                    if isinstance(target[key], dict):
+                        ret[key] = recurseJsonUpdate(target[key], source[key])
+                    else:
+                        ret[key] = target[key]
                 else:
-                    ret[key] = target[key]
-            else:
-                ret = target
-                # ret[key] = source[key]
+                    ret = target
+                    # ret[key] = source[key]
         elif isinstance(element, list):
             if key in target:
                 if isinstance(target[key], dict):
@@ -37,9 +40,11 @@ def recurseJsonUpdate(target, source):
 
 
 class Node:
-    def __init__(self, data, hash_):
+    def __init__(self, data, current_hash, prev_hash):
         self.data = data
-        self.hash = hash_
+        self.current_hash = current_hash
+        self.prev_hash = prev_hash
+        self.timestamp = int(time.time())
         self.next = None
         self.prev = None
 
@@ -48,7 +53,7 @@ class ElementContainer(object):
     def __init__(self):
         self.head = None
         self.tail = None
-        self.prev_hash = None
+        self.prev_hash = self.genesis()
         self.start_up()
 
     def start_up(self):
@@ -56,14 +61,13 @@ class ElementContainer(object):
         and add the data from the json file to the linked list at startup"""
         try:
             with open("hash.txt", "wb") as rb:
-                print("X")
                 pickle.dump(None, rb)
             if self.is_empty() is not True:
                 with open("data.json", "r")as fp:
                     loaded_json = json.load(fp)
                     for key, element in loaded_json.items():
+                        print("----", key)
                         di = {key: element}
-                        print(di)
                         self.add(di, key, state=True)
             else:
                 pass
@@ -72,7 +76,7 @@ class ElementContainer(object):
 
     def new_hash_func(self, data):
         """
-        In use
+        Not in use
         Will hash the data with the previous hash
         :param data:
         :return: hash_
@@ -92,8 +96,47 @@ class ElementContainer(object):
         return hash_
 
     @staticmethod
-    def add_hash_to_data(data, name, hash_):
-        new_dict = {name: {"prev_hash": hash_, "data": data}}
+    def genesis():
+        """
+        First part of the chain
+        :return:
+        """
+        return hash("This is the first link in the chain" + str(time.time()))
+
+    def hash_func(self, data):
+        """
+        this function has to be called after self.prev_hash is initialized
+        Will hash data
+        the hash will be used in the final data set
+        will create and return current_hash
+        it will also give prev_hash a new value for the next chain
+        :param data:
+        :return:
+        """
+        if self.head is None:
+            x = hash(str(data))
+            current_hash = x
+            self.prev_hash = x
+
+        else:
+            x = hash(str(data))
+            self.prev_hash = x
+            current_hash = x
+        return current_hash
+
+    @staticmethod
+    def add_hash_to_data(data, name, prev_hash, current_hash):
+        """
+        Will add current and previous data to the dict that will be put in the chain
+
+        :param data: Unfinished data
+        :param name: name of the data
+        :param prev_hash: origin hash func
+        :param current_hash: origin hash func
+        :return: the complete data set
+        """
+        new_dict = {
+            name: {"prev_hash": prev_hash, "current_hash": current_hash, "timestamp": int(time.time()), "data": data}}
         print(new_dict)
         return new_dict
 
@@ -108,15 +151,15 @@ class ElementContainer(object):
         :param state:
         :return:
         """
-        hash_ = self.new_hash_func(data)
-        data_ = self.add_hash_to_data(data, name, hash_)
+        prev_hash = self.prev_hash
+        current_hash = self.hash_func(data)
+
+        data_ = self.add_hash_to_data(data, name, prev_hash, current_hash)
         data = data_
-        hash_list = [hash_]
         if not isinstance(data, Node):
-            data = Node(data, hash_)
+            data = Node(data, current_hash, prev_hash)
 
         if self.head is None:
-            self.save_hash(hash_list)
             self.head = data
             data.next = None
             data.prev = None
@@ -131,32 +174,6 @@ class ElementContainer(object):
             feed = None
             if state is False:
                 self.save(data_)
-            self.save_hash(hash_list)
-
-    def save_hash(self, hash_):
-        """
-        Will save the hash in a text document for use in the hash function
-
-        :param hash_:
-        :return:
-        """
-        mutex.acquire()
-        try:
-            if self.head is None:
-                with open("hash.txt", "wb") as fp:
-                    pickle.dump(hash_, fp)
-            else:
-                with open("hash.txt", "rb") as rp:
-                    list_ = pickle.load(rp)
-                with open("hash.txt", "wb") as fp:
-                    list_.append(hash_[0])
-                    pickle.dump(list_, fp)
-        except pickle.PicklingError as e:
-            print(e)
-        except pickle.UnpicklingError as e:
-            print(e)
-        finally:
-            mutex.release()
 
     def save(self, data_):
         """
@@ -168,18 +185,15 @@ class ElementContainer(object):
         mutex.acquire()
         try:
             data = data_
-            print("data = ", data)
+
             if self.is_empty() is True:
                 with open("data.json", mode="w", encoding="utf-8") as feedsjson:
-                    print(data)
-                    print(type(data))
                     json.dump(data, feedsjson, indent=4)
 
             else:
                 with open("data.json", mode='r', encoding='utf-8') as feedsjson:
                     feeds = json.load(feedsjson)
                     feed = feeds
-                    print("first feed = ", feed)
                     x = recurseJsonUpdate(data, feed)
                     feed.update(x)
 
@@ -244,18 +258,19 @@ class ElementContainer(object):
 
             current_node = current_node.next
 
-    @staticmethod
-    def get_all_hashes():
+    def get_all_hashes(self):
         """
         Will get all of the hashes from the the text document
         :return:
         """
-        try:
-            with open("hash.txt", "rb") as rb:
-                hashes = pickle.load(rb)
-            return hashes
-        except pickle.UnpicklingError as e:
-            print(e)
+        current_node = self.head
+        temp_list = []
+        while current_node is not None:
+            if current_node.current_hash not in temp_list:
+                temp_list.append(current_node.current_hash)
+                print(current_node.current_hash)
+            current_node = current_node.next
+        return temp_list
 
     def get_first(self):
         """
@@ -320,7 +335,7 @@ class Element(ElementContainer):
 
         timestamp = int(time.time())
         data_list = [data]
-        data = {"event": data_list, "timestamp": timestamp}
+        data = {"event": data_list}
         return data
 
     def add_element(self, data, name):
