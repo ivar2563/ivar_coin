@@ -4,6 +4,7 @@ import pickle
 import json
 import unittest
 from threading import Lock
+import uuid
 
 mutex = Lock()
 
@@ -11,18 +12,16 @@ mutex = Lock()
 def recurseJsonUpdate(target, source):
     ret = {}
     for key, element in source.items():
-        if key != "data":
-            pass
-        if key == "data":
-            if isinstance(element, dict):
-                if key in target:
-                    if isinstance(target[key], dict):
-                        ret[key] = recurseJsonUpdate(target[key], source[key])
-                    else:
-                        ret[key] = target[key]
+
+        if isinstance(element, dict):
+            if key in target:
+                if isinstance(target[key], dict):
+                    ret[key] = recurseJsonUpdate(target[key], source[key])
                 else:
-                    ret = target
-                    # ret[key] = source[key]
+                    ret[key] = target[key]
+            else:
+                ret = target
+                # ret[key] = source[key]
         elif isinstance(element, list):
             if key in target:
                 if isinstance(target[key], dict):
@@ -57,43 +56,20 @@ class ElementContainer(object):
         self.start_up()
 
     def start_up(self):
-        """Wil clear the old hashes,
-        and add the data from the json file to the linked list at startup"""
+        """
+        Wil add the data from the json file to the linked list at startup
+        """
         try:
-            with open("hash.txt", "wb") as rb:
-                pickle.dump(None, rb)
             if self.is_empty() is not True:
                 with open("data.json", "r")as fp:
                     loaded_json = json.load(fp)
                     for key, element in loaded_json.items():
-                        print("----", key)
                         di = {key: element}
                         self.add(di, key, state=True)
             else:
                 pass
         except json.JSONDecodeError as e:
             print(e)
-
-    def new_hash_func(self, data):
-        """
-        Not in use
-        Will hash the data with the previous hash
-        :param data:
-        :return: hash_
-        """
-        if self.head is None:
-            hash_ = hash(str(data))
-        else:
-            current_node = self.head
-            last = None
-            while current_node is not None:
-                last = current_node
-                current_node = current_node.next
-            previous = last.data
-            to_be_hashed = str(previous) + str(data)
-            hash_ = hash(to_be_hashed)
-
-        return hash_
 
     @staticmethod
     def genesis():
@@ -124,29 +100,45 @@ class ElementContainer(object):
             current_hash = x
         return current_hash
 
-    @staticmethod
-    def add_hash_to_data(data, name, prev_hash, current_hash):
+    def id(self):
+        """
+        Will create an id for the data
+        :return:
+        """
+        id_ = str(uuid.uuid1())
+        current_node = self.head
+        while current_node is not None:
+            if current_node.data.keys != id_:
+                current_node = current_node.next
+            else:
+                id_ = str(uuid.uuid1())
+                current_node = self.head
+        return id_
+
+    def add_to_data(self, data, prev_hash, current_hash, id_=None):
         """
         Will add current and previous data to the dict that will be put in the chain
 
+        :param id_: If the id already exists
         :param data: Unfinished data
-        :param name: name of the data
         :param prev_hash: origin hash func
         :param current_hash: origin hash func
         :return: the complete data set
         """
+        if id_ is None:
+            id_ = self.id()
         new_dict = {
-            name: {"prev_hash": prev_hash, "current_hash": current_hash, "timestamp": int(time.time()), "data": data}}
-        print(new_dict)
+            id_: {"prev_hash": prev_hash, "current_hash": current_hash, "timestamp": int(time.time()),
+                  "data": data}}
         return new_dict
 
-    def add(self, data, name, state=False):
+    def add(self, data, id_=None, state=False):
         """
         Will add data to the linked list
         and add the hash to the hash list
         it will also save the data to a json file for late use
 
-        :param name:
+        :param id_:
         :param data:
         :param state:
         :return:
@@ -154,7 +146,11 @@ class ElementContainer(object):
         prev_hash = self.prev_hash
         current_hash = self.hash_func(data)
 
-        data_ = self.add_hash_to_data(data, name, prev_hash, current_hash)
+        if state is True:
+            data_ = self.add_hash_to_data(data, prev_hash, current_hash, id_)
+        if state is False:
+            data_ = self.add_hash_to_data(data, prev_hash, current_hash)
+
         data = data_
         if not isinstance(data, Node):
             data = Node(data, current_hash, prev_hash)
@@ -329,7 +325,6 @@ class Element(ElementContainer):
         Needs data and name if the name already exist the data will join the existing name
 
         :param data:
-        :param name:
         :return:
         """
 
@@ -338,7 +333,7 @@ class Element(ElementContainer):
         data = {"event": data_list}
         return data
 
-    def add_element(self, data, name):
+    def add_element(self, data):
         """
         Will call the Add function from the ElementContainer
         It will also call the create_data function
@@ -349,4 +344,4 @@ class Element(ElementContainer):
         """
 
         data = self.create_data(data)
-        self.add(data, name)
+        self.add(data)
