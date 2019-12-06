@@ -1,5 +1,5 @@
 import unittest
-import Datastructures
+from BlockChain import Datastructures
 
 x = Datastructures.Element()
 
