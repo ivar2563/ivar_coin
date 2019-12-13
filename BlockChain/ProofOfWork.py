@@ -10,10 +10,10 @@ max_bits = 160
 
 def validate(string_, bite):
     if bite > max_bits or bite <= 0:
-        raise ValueError("0-160 bites, was {}".format(bite))
+        raise ValueError("0-160 bites, was given {}".format(bite))
     i = 0
     total = 0
-    N = bite / 8
+    N = int(bite / 8)
     string_ = string_.encode("utf-8")
     x = hashlib.sha1(string_).digest()
 
@@ -28,8 +28,6 @@ def validate(string_, bite):
     return total == 0
 
 
-
-
 def generate(data, bite):
     ver = "1"
     bite = bite
@@ -40,11 +38,8 @@ def generate(data, bite):
     rand = "".join(random.choice(letters) for i in range(10))
     counter = 0
 
-    result = ""
     while True:
-        string_ = ":".join(str(elm for elm in [ver, bite, date_time, data, ext, rand, counter]))
-        counter += 1
-
+        string_ = ":".join(str(elm) for elm in [ver, bite, date_time, data, ext, rand, counter])
         if validate(string_, bite):
             result = string_
             break
@@ -52,4 +47,3 @@ def generate(data, bite):
     return result
 
 
-print(generate("sades", 5))
