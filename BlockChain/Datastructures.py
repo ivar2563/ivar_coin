@@ -145,9 +145,9 @@ class ElementContainer(object):
         current_hash = self.hash_func(data)
 
         if state is True:
-            data_ = self.add_hash_to_data(data, prev_hash, current_hash, id_)
+            data_ = self.add_to_data(data, prev_hash, current_hash, id_)
         if state is False:
-            data_ = self.add_hash_to_data(data, prev_hash, current_hash)
+            data_ = self.add_to_data(data, prev_hash, current_hash)
 
         data = data_
         if not isinstance(data, Node):

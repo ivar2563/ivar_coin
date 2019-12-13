@@ -1,5 +1,6 @@
 from flask import Flask, request
 from BlockChain.Datastructures import Element
+from BlockChain.CheckWork import validate
 
 app = Flask(__name__)
 e = Element()
@@ -23,16 +24,17 @@ def get_hash():
     return response
 
 
-@app.route("/api/add_data/", methods=["POST"])
-def add_data():
-    print("Yes")
+@app.route("/api/add_node/", methods=["POST"])
+def add_node():
+    print("started")
+    string_ = request.json["string"]
     data = request.json["data"]
-    print(data)
-    print("------------------------------------", data)
-    e.add_element(data)
-
-    response = {"Data": e.get_all()}
-    return response
+    if validate(string_):
+        e.add_element(data)
+        response = {"Data": e.get_all()}
+        return response
+    else:
+        return "The string was already used, or its wrong"
 
 
 @app.route("/api/get/all/", methods=["GET"])

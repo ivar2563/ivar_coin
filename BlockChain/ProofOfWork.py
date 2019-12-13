@@ -8,9 +8,13 @@ min_bits = 0
 max_bits = 160
 
 
+def is_valid(result):
+    return validate(result, int(result.split(':')[1]))
+
+
 def validate(string_, bite):
     if bite > max_bits or bite <= 0:
-        raise ValueError("0-160 bites, was given {}".format(bite))
+        raise ValueError("0-160 bites, {} was given".format(bite))
     i = 0
     total = 0
     N = int(bite / 8)
