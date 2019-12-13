@@ -264,7 +264,6 @@ class ElementContainer(object):
         while current_node is not None:
             if current_node.current_hash not in temp_list:
                 temp_list.append(current_node.current_hash)
-                print(current_node.current_hash)
             current_node = current_node.next
         return temp_list
 
