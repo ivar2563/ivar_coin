@@ -10,8 +10,11 @@ def validate(string_):
         if string_ not in list_:
             with open("proof_of_work_list.txt", "wb") as fp:
                 pickle.dump(string_, fp)
+            print(True)
             return True
         else:
+            print(False)
             return False
     else:
+        print(False)
         return False

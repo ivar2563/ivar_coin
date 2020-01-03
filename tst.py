@@ -27,12 +27,13 @@ class SomeContainer(object):
             self.var -= 1
             raise IvarException(self.var, "Msg")
 
-            #if random() > 0.95:
-             #   raise IvarException(self)
+            # if random() > 0.95:
+            #   raise IvarException(self)
 
         except IvarException as e:
             logging.info(e)
             print(e)
+
 
 class KeyboardSubException(KeyboardInterrupt):
 
@@ -58,7 +59,6 @@ except IvarException():
     pass
 finally:
     pass
-
 
 x = SomeContainer(20)
 x.do_stuff()

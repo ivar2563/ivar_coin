@@ -46,6 +46,10 @@ class Node:
         self.prev = None
 
 
+class NotIntact(Exception):
+    pass
+
+
 class ElementContainer(object):
     def __init__(self):
         self.head = None
@@ -55,15 +59,16 @@ class ElementContainer(object):
 
     def start_up(self):
         """
-        Wil add the data from the json file to the linked list at startup
+        Will add the data from the json file to the linked list at startup
         """
         try:
             if self.is_empty() is not True:
                 with open("data.json", "r")as fp:
                     loaded_json = json.load(fp)
                     for key, element in loaded_json.items():
+                        string = element["Validated_string"]
                         di = {key: element}
-                        self.add(di, key, state=True)
+                        self.add(di, string, key, state=True)
             else:
                 pass
         except json.JSONDecodeError as e:
@@ -77,23 +82,25 @@ class ElementContainer(object):
         """
         return hash("This is the first link in the chain" + str(time.time()))
 
-    def hash_func(self, data):
+    def hash_func(self, data, string):
         """
         this function has to be called after self.prev_hash is initialized
         Will hash data
         the hash will be used in the final data set
         will create and return current_hash
         it will also give prev_hash a new value for the next chain
+        :param string:
         :param data:
         :return:
         """
+        data = str(data) + string
         if self.head is None:
-            x = hash(str(data))
+            x = hash(data)
             current_hash = x
             self.prev_hash = x
 
         else:
-            x = hash(str(data))
+            x = hash(data)
             self.prev_hash = x
             current_hash = x
         return current_hash
@@ -109,14 +116,15 @@ class ElementContainer(object):
             if current_node.data.keys != id_:
                 current_node = current_node.next
             else:
-                id_ = str(uuid.uuid1())
+                id_ = str(uuid.uuid4())
                 current_node = self.head
         return id_
 
-    def add_to_data(self, data, prev_hash, current_hash, id_=None):
+    def add_to_data(self, data, prev_hash, current_hash, string, id_=None):
         """
         Will add current and previous data to the dict that will be put in the chain
 
+        :param string:
         :param id_: If the id already exists
         :param data: Unfinished data
         :param prev_hash: origin hash func
@@ -126,28 +134,32 @@ class ElementContainer(object):
         if id_ is None:
             id_ = self.id()
         new_dict = {
-            id_: {"prev_hash": prev_hash, "current_hash": current_hash, "timestamp": int(time.time()),
+            id_: {"prev_hash": prev_hash,
+                  "current_hash": current_hash,
+                  "Validated_string": string,
+                  "timestamp": int(time.time()),
                   "data": data}}
         return new_dict
 
-    def add(self, data, id_=None, state=False):
+    def add(self, data, string, id_=None, state=False):
         """
         Will add data to the linked list
         and add the hash to the hash list
-        it will also save the data to a json file for late use
+        it will also save the data to a json file for later use
 
+        :param string:
         :param id_:
         :param data:
         :param state:
         :return:
         """
         prev_hash = self.prev_hash
-        current_hash = self.hash_func(data)
+        current_hash = self.hash_func(data, string)
 
         if state is True:
-            data_ = self.add_to_data(data, prev_hash, current_hash, id_)
+            data_ = self.add_to_data(data, prev_hash, current_hash, string, id_)
         if state is False:
-            data_ = self.add_to_data(data, prev_hash, current_hash)
+            data_ = self.add_to_data(data, prev_hash, current_hash, string)
 
         data = data_
         if not isinstance(data, Node):
@@ -168,6 +180,9 @@ class ElementContainer(object):
             feed = None
             if state is False:
                 self.save(data_)
+        for a in data_.keys():
+            a = a
+        return a
 
     def save(self, data_):
         """
@@ -305,9 +320,45 @@ class ElementContainer(object):
         while current_node is not None:
             last_node = current_node
             current_node = current_node.next
-        last = last_node.data
-
+        last = last_node
         return last
+
+    def get_node(self, receipt):
+        current_node = self.head
+        response = None
+        while current_node is not None:
+            print(next(iter(current_node.data)), receipt)
+            if next(iter(current_node.data)) == receipt:
+                response = current_node.data
+                break
+            current_node = current_node.next
+        if response is None:
+            response = "The receipt did not exist"
+        return response
+
+    def get_hashes(self):
+        current_node = self.head
+        list_ = []
+        while current_node is not None:
+            list_.append(str(current_node.current_hash) + " - " + str(current_node.prev_hash))
+            current_node = current_node.next
+        return list_
+
+    def validate_chain(self):
+        print("start")
+        current_node = self.head
+
+        while current_node is not None:
+            a = current_node.current_hash
+            current_node = current_node.next
+            if current_node is not None:
+                b = current_node.prev_hash
+                if a != b:
+                    raise NotIntact
+        print("Done")
+
+x = ElementContainer()
+x.validate_chain()
 
 
 class Element(ElementContainer):
@@ -330,7 +381,7 @@ class Element(ElementContainer):
         data = {"event": data_list}
         return data
 
-    def add_element(self, data):
+    def add_element(self, data, string):
         """
         Will call the Add function from the ElementContainer
         It will also call the create_data function
@@ -341,4 +392,5 @@ class Element(ElementContainer):
         """
 
         data = self.create_data(data)
-        self.add(data)
+        x = self.add(data, string)
+        return x
