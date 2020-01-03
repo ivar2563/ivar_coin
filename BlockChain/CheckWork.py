@@ -3,7 +3,11 @@ import pickle
 
 
 def validate(string_):
-    print("start")
+    """
+    Will validate the proof of work string
+    :param string_:
+    :return:
+    """
     if is_valid(string_):
         if check_if_empty() is False:
             with open('proof_of_work_list.txt', 'rb') as fp:
@@ -26,6 +30,10 @@ def validate(string_):
 
 
 def check_if_empty():
+    """
+    Will check if the pickle list is empty
+    :return:
+    """
     try:
         with open('proof_of_work_list.txt', 'rb') as fp:
             list_ = pickle.load(fp)

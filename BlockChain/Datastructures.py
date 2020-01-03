@@ -110,7 +110,7 @@ class ElementContainer(object):
         Will create an id for the data
         :return:
         """
-        id_ = str(uuid.uuid1())
+        id_ = str(uuid.uuid4())
         current_node = self.head
         while current_node is not None:
             if current_node.data.keys != id_:
@@ -180,9 +180,10 @@ class ElementContainer(object):
             feed = None
             if state is False:
                 self.save(data_)
-        for a in data_.keys():
-            a = a
-        return a
+        for receipt in data_.keys():
+            receipt = receipt
+        return receipt
+
 
     def save(self, data_):
         """
@@ -269,7 +270,7 @@ class ElementContainer(object):
 
     def get_all_hashes(self):
         """
-        Will get all of the hashes from the the text document
+        Will get all of the hashes from the nodes
         :return:
         """
         current_node = self.head
@@ -324,6 +325,12 @@ class ElementContainer(object):
         return last
 
     def get_node(self, receipt):
+        """
+        Will be able to get the node
+        with the receipt that was sent under the creation of the node
+        :param receipt:
+        :return:
+        """
         current_node = self.head
         response = None
         while current_node is not None:
@@ -337,6 +344,10 @@ class ElementContainer(object):
         return response
 
     def get_hashes(self):
+        """
+        Not to be used
+        :return:
+        """
         current_node = self.head
         list_ = []
         while current_node is not None:
@@ -345,6 +356,10 @@ class ElementContainer(object):
         return list_
 
     def validate_chain(self):
+        """
+        Will check if the chain is intact
+        :return:
+        """
         print("start")
         current_node = self.head
 
@@ -356,6 +371,7 @@ class ElementContainer(object):
                 if a != b:
                     raise NotIntact
         print("Done")
+
 
 x = ElementContainer()
 x.validate_chain()
@@ -386,8 +402,8 @@ class Element(ElementContainer):
         Will call the Add function from the ElementContainer
         It will also call the create_data function
 
+        :param string:
         :param data:
-        :param name:
         :return:
         """
 
