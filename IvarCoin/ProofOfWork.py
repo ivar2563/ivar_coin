@@ -2,7 +2,7 @@ import hashlib
 import random
 import string
 from datetime import datetime
-import base64
+
 
 min_bits = 0
 max_bits = 160

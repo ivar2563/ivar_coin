@@ -3,9 +3,13 @@ import json
 from threading import Lock
 import uuid
 import os
+import logging
 import IvarCoin.ProofOfWork
 
 mutex = Lock()
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    filename='chain.log')
 
 
 def recurseJsonUpdate(target, source):
@@ -71,7 +75,6 @@ class ElementContainer(object):
         json_path = str(self.get_json_path())
         try:
             if self.is_empty() is not True:
-                print(self.is_empty())
                 with open(json_path, "r")as fp:
                     loaded_json = json.load(fp)
                     for key, element in loaded_json.items():
@@ -81,7 +84,7 @@ class ElementContainer(object):
             else:
                 pass
         except json.JSONDecodeError as e:
-            print(e)
+            logging.CRITICAL(e)
 
     @staticmethod
     def genesis():
@@ -208,7 +211,6 @@ class ElementContainer(object):
 
             if self.is_empty() is True:
                 with open(json_path, mode="w", encoding="utf-8") as feedsjson:
-                    print(data)
                     json.dump(data, feedsjson, indent=4)
 
             else:
@@ -219,11 +221,9 @@ class ElementContainer(object):
                     feed.update(x)
 
                 with open(json_path, mode="w", encoding="utf-8") as feedsjson:
-                    print(data)
                     json.dump(feed, feedsjson, indent=4)
 
-        #except json.JSONDecodeError:
-        except NotIntact:
+        except json.JSONDecodeError:
             try:
                 with open(json_path, mode="w", encoding="utf-8") as feedsjson:
                     json.dump(feeds, feedsjson)
@@ -352,7 +352,6 @@ class ElementContainer(object):
         current_node = self.head
         response = None
         while current_node is not None:
-            print(next(iter(current_node.data)), receipt)
             if next(iter(current_node.data)) == receipt:
                 response = current_node.data
                 break
@@ -378,7 +377,7 @@ class ElementContainer(object):
         Will check if the chain is intact
         :return:
         """
-        print("start")
+        logging.debug("Chain validation started")
         current_node = self.head
 
         while current_node is not None:
@@ -387,8 +386,10 @@ class ElementContainer(object):
             if current_node is not None:
                 b = current_node.prev_hash
                 if a != b:
+                    logging.debug("Chain validation failed")
                     raise NotIntact
-        print("Done")
+        logging.debug("Chain validation success")
+
 
 
 x = ElementContainer()
