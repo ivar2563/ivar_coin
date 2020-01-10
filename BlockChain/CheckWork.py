@@ -12,20 +12,16 @@ def validate(string_):
         if check_if_empty() is False:
             with open('proof_of_work_list.txt', 'rb') as fp:
                 list_ = pickle.load(fp)
-                print(list_)
         if check_if_empty() is True:
             list_ = []
         if string_ not in list_:
             list_.append(string_)
             with open("proof_of_work_list.txt", "wb") as fp:
                 pickle.dump(list_, fp)
-            print(True)
             return True
         else:
-            print(False)
             return False
     else:
-        print(False)
         return False
 
 
