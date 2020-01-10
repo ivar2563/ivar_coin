@@ -130,4 +130,5 @@ dmypy.json
 
 # Pycharm stuff
 .idea/
-Ignore
+Ignore/
+
