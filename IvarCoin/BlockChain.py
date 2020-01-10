@@ -2,7 +2,8 @@ import time
 import json
 from threading import Lock
 import uuid
-import BlockChain.ProofOfWork
+import os
+import IvarCoin.ProofOfWork
 
 mutex = Lock()
 
@@ -57,13 +58,21 @@ class ElementContainer(object):
         self.prev_hash = self.genesis()
         self.start_up()
 
+    @staticmethod
+    def get_json_path():
+        script_dir = os.path.dirname(__file__)
+        file_path = os.path.join(script_dir, "data.json")
+        return file_path
+
     def start_up(self):
         """
         Will add the data from the json file to the linked list at startup
         """
+        json_path = str(self.get_json_path())
         try:
             if self.is_empty() is not True:
-                with open("data.json", "r")as fp:
+                print(self.is_empty())
+                with open(json_path, "r")as fp:
                     loaded_json = json.load(fp)
                     for key, element in loaded_json.items():
                         string = element["Validated_string"]
@@ -184,7 +193,6 @@ class ElementContainer(object):
             receipt = receipt
         return receipt
 
-
     def save(self, data_):
         """
         Will save data to a json file for later use
@@ -192,27 +200,32 @@ class ElementContainer(object):
         :param data_:
         :return:
         """
+        json_path = str(self.get_json_path())
+
         mutex.acquire()
         try:
             data = data_
 
             if self.is_empty() is True:
-                with open("data.json", mode="w", encoding="utf-8") as feedsjson:
+                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
+                    print(data)
                     json.dump(data, feedsjson, indent=4)
 
             else:
-                with open("data.json", mode='r', encoding='utf-8') as feedsjson:
+                with open(json_path, mode='r', encoding='utf-8') as feedsjson:
                     feeds = json.load(feedsjson)
                     feed = feeds
                     x = recurseJsonUpdate(data, feed)
                     feed.update(x)
 
-                with open("data.json", mode="w", encoding="utf-8") as feedsjson:
+                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
+                    print(data)
                     json.dump(feed, feedsjson, indent=4)
 
-        except json.JSONDecodeError:
+        #except json.JSONDecodeError:
+        except NotIntact:
             try:
-                with open("data.json", mode="w", encoding="utf-8") as feedsjson:
+                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
                     json.dump(feeds, feedsjson)
             except json.JSONDecodeError:
                 pass
@@ -220,20 +233,25 @@ class ElementContainer(object):
         finally:
             mutex.release()
 
-    @staticmethod
-    def is_empty():
+    def is_empty(self):
         """
         Will check if the json file is empty
         And return True if it is
 
         :return:
         """
-        with open("data.json", mode="r") as f:
-            try:
-                json.loads(f.read())
-                return False
-            except json.JSONDecodeError:
-                return True
+        json_path = str(self.get_json_path())
+        try:
+            with open(json_path, mode="r") as f:
+                try:
+                    json.loads(f.read())
+                    return False
+                except json.JSONDecodeError:
+                    return True
+        except FileNotFoundError:
+            with open(json_path, mode="w", encoding="utf-8") as f:
+                empty_dic = ""
+                json.dump(empty_dic, f)
 
     def get_all(self):
         """

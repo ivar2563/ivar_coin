@@ -1,7 +1,7 @@
 import unittest
-from BlockChain import Datastructures
+from IvarCoin import BlockChain
 
-x = Datastructures.Element()
+x = BlockChain.Element()
 
 print(">>>>>>>>>", x.is_empty(), "<<<<<<<<")
 

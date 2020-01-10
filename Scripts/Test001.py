@@ -1,4 +1,4 @@
-from BlockChain.ProofOfWork import generate
+from IvarCoin.ProofOfWork import generate
 import requests
 import json
 

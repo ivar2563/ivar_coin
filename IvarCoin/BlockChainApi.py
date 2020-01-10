@@ -1,6 +1,6 @@
 from flask import Flask, request
-from BlockChain.Datastructures import Element
-from BlockChain.CheckWork import validate
+from IvarCoin.BlockChain import Element
+from IvarCoin.CheckWork import validate_
 
 app = Flask(__name__)
 e = Element()
@@ -42,11 +42,12 @@ def add_node():
     """
     string_ = request.json["string"]
     data = request.json["data"]
-    string_response = validate(string_)
+    string_response = validate_(string_)
     if string_response is True:
         response = e.add_element(data, string_)
         return response, 200
     else:
+        print("FAIL")
         return "The string was already used, or its wrong", 400
 
 
