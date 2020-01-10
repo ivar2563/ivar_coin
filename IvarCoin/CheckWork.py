@@ -11,23 +11,17 @@ def validate_(string_):
     """
     if is_valid(string_):
         if check_if_empty() is False:
-            list_ = []
             with open(get_path(), 'rb') as fp:
-                list__ = pickle.load(fp)
-            if string_ not in list_:
-                list_.append(list__)
-                list_.append(string_)
-                with open(get_path(), "wb") as fp:
-                    pickle.dump(list_, fp)
-                return True
+                list_ = pickle.load(fp)
 
         if check_if_empty() is True:
             list_ = []
-            if string_ not in list_:
-                list_.append(string_)
-                with open(get_path(), "wb") as fp:
-                    pickle.dump(list_, fp)
-                return True
+
+        if string_ not in list_:
+            list_.append(string_)
+            with open(get_path(), "wb") as fp:
+                pickle.dump(list_, fp)
+            return True
         else:
             return False
     else:
