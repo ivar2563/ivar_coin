@@ -1,4 +1,4 @@
-from Ignore.element import Element
+from ignore_git.element import Element
 
 class Stack(object):
     def __init__(self):
