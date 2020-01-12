@@ -244,13 +244,17 @@ class ElementContainer(object):
         try:
             with open(json_path, mode="r") as f:
                 try:
-                    json.loads(f.read())
-                    return False
+                    len_ = json.loads(f.read())
+                    print(len_)
+                    if len(len_) == 0:
+                        return True
+                    else:
+                        return False
                 except json.JSONDecodeError:
                     return True
         except FileNotFoundError:
             with open(json_path, mode="w", encoding="utf-8") as f:
-                empty_dic = ""
+                empty_dic = {}
                 json.dump(empty_dic, f)
 
     def get_all(self):
