@@ -420,22 +420,6 @@ class Element(ElementContainer):
     def __init__(self):
         super(Element, self).__init__()
 
-    @staticmethod
-    def create_data(data):
-        """
-        Will create data that will be able to be put in the linked list
-
-        Needs data and name if the name already exist the data will join the existing name
-
-        :param data:
-        :return:
-        """
-
-        timestamp = int(time.time())
-        data_list = [data]
-        data = {"event": data_list}
-        return data
-
     def add_element(self, data, string):
         """
         Will call the Add function from the ElementContainer
@@ -446,6 +430,6 @@ class Element(ElementContainer):
         :return:
         """
 
-        data = self.create_data(data)
+        #data = self.create_data(data)
         x = self.add(data, string)
         return x
