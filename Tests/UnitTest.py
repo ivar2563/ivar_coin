@@ -31,6 +31,10 @@ class ListUnitTest(unittest.TestCase):
         self.assertEqual(1, 1)
 
     def test_get_first(self):
+        """
+        Will not work if the chain is empty
+        :return:
+        """
         xp = x.get_first()
         print(xp)
         self.assertNotEqual(len(xp), 0)

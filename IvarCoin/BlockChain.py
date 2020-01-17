@@ -164,7 +164,6 @@ class ElementContainer(object):
         it will also save the data to a json file for later use
 
         :param string:
-        :param id_:
         :param data:
         :param state:
         :return:
