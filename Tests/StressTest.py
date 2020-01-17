@@ -2,6 +2,14 @@ from IvarCoin.ProofOfWork import generate
 import requests
 import json
 
+"""
+This code will create 10 nodes. 
+The code saves proof of work strings and will try to use the string again
+Which should not be possible 
+In the "chain.log" there should be 10 "200" and 10 "400" responses 
+
+"""
+
 email = "Ola.norman@lyse.net"
 bits = 20
 

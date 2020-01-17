@@ -2,6 +2,9 @@ from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import logging
+"""
+"""
+
 
 app = Flask(__name__)
 e = Element()
@@ -20,7 +23,6 @@ def add_node():
     string_response = validate_(string_)
     if string_response is True:
         response = e.add_element(data, string_)
-        logging.debug(response)
         return response, 200
     else:
         return "The string was already used, or its wrong", 400
