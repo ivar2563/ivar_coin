@@ -1,7 +1,14 @@
 import unittest
 from IvarCoin import BlockChain
+from IvarCoin import ProofOfWork
+import requests
 
 x = BlockChain.Element()
+
+proof_of_work = ProofOfWork
+
+email = "Unit.test@gmail.com"
+bits = 20
 
 print(">>>>>>>>>", x.is_empty(), "<<<<<<<<")
 
@@ -26,12 +33,22 @@ class ListUnitTest(unittest.TestCase):
         print(xp)
         self.assertNotEqual(len(xp), 0)
 
-    def test_add_and_check(self):
-        data = "sos"
-        name = "Msg"
-        xp = x.add_element(data, name)
-        x2 = x.get_last()
-        self.assertAlmostEqual(xp, x2)
+    def add_and_validate(self):
+        string = proof_of_work.generate(email, bits)
+        data = {
+            "data": ["car", "bus"],
+            "string": string
+        }
+        x = requests.post("http://127.0.0.1:5000/api/add_node/", json=data)
+        respons = x.content
+
+        self.assertin(data, )
+
+
+
+
+    def check_validating_string(self):
+        pass
 
 
 if __name__ == "__main__":

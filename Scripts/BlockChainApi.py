@@ -7,32 +7,6 @@ app = Flask(__name__)
 e = Element()
 
 
-@app.route("/api/create_10/", methods=["GET"])
-def create_10():
-    """
-    Wont work
-    Will create 10 nodes
-    :return:
-    """
-    random_value = ["0", "2", "42", "52", "25", "34", "77", "21", "75", "73"]
-    for a in random_value:
-        e.add_element(a)
-
-    x = e.get_all()
-    response = {"data": x}
-    return response
-
-
-@app.route('/api/', methods=["GET"])
-def get_hash():
-    """
-    :return:
-    """
-    x = e.get_all_hashes()
-    response = {"Hashes": x}
-    return response
-
-
 @app.route("/api/add_node/", methods=["POST"])
 def add_node():
     """
@@ -95,6 +69,17 @@ def get_by_index():
     x = e.get_by_index(index)
     response = {"data": x}
     return response
+
+
+@app.route("/api/get_node/", methods=["POST"])
+def get_node_with_receipt():
+    """
+    Will get the node associated with the receipt
+    :return:
+    """
+    receipt = request.json["receipt"]
+    node = e.get_node(receipt)
+    return node
 
 
 if __name__ == '__main__':

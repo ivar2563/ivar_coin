@@ -80,7 +80,7 @@ class ElementContainer(object):
                     for key, element in loaded_json.items():
                         string = element["Validated_string"]
                         di = {key: element}
-                        self.add(di, string, key, state=True)
+                        self.add(di, string, state=True)
             else:
                 pass
         except json.JSONDecodeError as e:
@@ -153,7 +153,7 @@ class ElementContainer(object):
                   "data": data}}
         return new_dict
 
-    def add(self, data, string, id_=None, state=False):
+    def add(self, data, string, state=False):
         """
         Will add data to the linked list
         and add the hash to the hash list
@@ -169,7 +169,7 @@ class ElementContainer(object):
         current_hash = self.hash_func(data, string)
 
         if state is True:
-            data_ = self.add_to_data(data, prev_hash, current_hash, string, id_)
+            data_ = data
         if state is False:
             data_ = self.add_to_data(data, prev_hash, current_hash, string)
 
@@ -245,7 +245,6 @@ class ElementContainer(object):
             with open(json_path, mode="r") as f:
                 try:
                     len_ = json.loads(f.read())
-                    print(len_)
                     if len(len_) == 0:
                         return True
                     else:
@@ -394,10 +393,27 @@ class ElementContainer(object):
                     raise NotIntact
         logging.debug("Chain validation success")
 
+    def check_ids(self):
+        """
+        Will check if and id`s have already been used
+        :return:
+        """
+        list_ = []
+        current_node = self.head
+        while current_node is not None:
+            id_ = current_node.data.keys()
+            if id_ not in list_:
+                list_.append(id_)
+                current_node = current_node.next
+            else:
+                logging.debug("The id was used")
+                break
+        logging.debug("The ids where confirmed")
 
 
 x = ElementContainer()
 x.validate_chain()
+x.check_ids()
 
 
 class Element(ElementContainer):

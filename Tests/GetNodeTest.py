@@ -1,0 +1,10 @@
+import requests
+
+
+def get_node_test():
+    string = {"receipt": "a0aebace-ef47-4cfc-9605-19d02a6d0864"}
+    respons = requests.post("http://127.0.0.1:5000/api/get_node/", json=string)
+    print(respons.content)
+
+
+get_node_test()
