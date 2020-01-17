@@ -6,10 +6,14 @@ import os
 import logging
 import IvarCoin.ProofOfWork
 
+script_dir = os.path.dirname(__file__)
+file_path = os.path.join(script_dir, "chain.log")
+
+
 mutex = Lock()
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',
-                    filename='chain.log')
+                    filename=file_path)
 
 
 def recurseJsonUpdate(target, source):

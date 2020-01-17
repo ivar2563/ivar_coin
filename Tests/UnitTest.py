@@ -56,5 +56,6 @@ class ListUnitTest(unittest.TestCase):
         proof = proof_of_work.is_valid(string)
         self.assertTrue(proof)
 
+
 if __name__ == "__main__":
     unittest.main()
