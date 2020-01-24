@@ -1,5 +1,10 @@
 import requests
 
+"""
+If you want to get a node back
+u can give tha variable called string your receipt
+"""
+
 
 def get_node_test():
     string = {"receipt": "a0aebace-ef47-4cfc-9605-19d02a6d0864"}
