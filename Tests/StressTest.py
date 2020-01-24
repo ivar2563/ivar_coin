@@ -24,7 +24,7 @@ def test():
             "data": [2, "pro", {"x23": "2s"}, ["sda", 242]],
             "string": x
         }
-        x = requests.post("http://127.0.0.1:5000/api/add_node/", json=data)
+        x = requests.post("http://localhost:8081/api/add_node/", json=data)
         if x.status_code == 200:
             print(x.content)
             break
@@ -38,7 +38,7 @@ def test2():
             "data": [2, "pro", {"x23": "2s"}, ["sda", 242]],
             "string": a
         }
-        x = requests.post("http://127.0.0.1:5000/api/add_node/", json=data)
+        x = requests.post("http://localhost:8081/api/add_node/", json=data)
         if x.status_code == 200:
             print(x.content)
 

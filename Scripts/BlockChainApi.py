@@ -86,6 +86,6 @@ def get_node_with_receipt():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
     x = Element()
     x.validate_chain()

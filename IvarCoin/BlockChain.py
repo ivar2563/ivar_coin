@@ -7,7 +7,7 @@ import logging
 import IvarCoin.ProofOfWork
 
 script_dir = os.path.dirname(__file__)
-file_path = os.path.join(script_dir, "chain.log")
+file_path = os.path.join(script_dir, "Data/chain.log")
 
 
 mutex = Lock()
@@ -69,7 +69,7 @@ class ElementContainer(object):
     @staticmethod
     def get_json_path():
         script_dir = os.path.dirname(__file__)
-        file_path = os.path.join(script_dir, "data.json")
+        file_path = os.path.join(script_dir, "Data/data.json")
         return file_path
 
     def start_up(self):

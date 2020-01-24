@@ -48,5 +48,5 @@ def check_if_empty():
 
 def get_path():
     script_dir = os.path.dirname(__file__)
-    file_path = os.path.join(script_dir, "proof_of_work_list.txt")
+    file_path = os.path.join(script_dir, "Data/proof_of_work_list.txt")
     return file_path

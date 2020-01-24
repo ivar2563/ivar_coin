@@ -5,3 +5,16 @@
     * The first time you will most likely have to run the script more then once
 * The "UnitTest.py" will not work if the chain is empty
 
+## Docker
+* docker build -t ivarcoin .
+
+* docker run -d -p 8080:5000 \
+  --name=ivarcoin \
+  --mount source=ivarcoin-vol,destination=/app/IvarCoin/Data \
+  ivarcoin:latest
+  
+ https://docs.docker.com/storage/volumes/
+ 
+ ### delete volume 
+* docker volume ls 
+* docker volume rm (volume name) 
