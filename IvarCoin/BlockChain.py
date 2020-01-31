@@ -433,6 +433,5 @@ class Element(ElementContainer):
         :return:
         """
 
-        #data = self.create_data(data)
         x = self.add(data, string)
         return x
