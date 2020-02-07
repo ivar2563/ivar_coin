@@ -1,10 +1,12 @@
 from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
+import os
 import logging
-"""
-"""
+import pickle
 
+"""
+"""
 
 app = Flask(__name__)
 e = Element()
@@ -23,6 +25,9 @@ def add_node():
     string_response = validate_(string_)
     if string_response is True:
         response = e.add_element(data, string_)
+        data = {"string": string_, "data": data}
+        for node_ip in node_ips:
+            _ = request(node_ip, "/api/add_node/")
         return response, 200
     else:
         return "The string was already used, or its wrong", 400
@@ -83,6 +88,38 @@ def get_node_with_receipt():
     receipt = request.json["receipt"]
     node = e.get_node(receipt)
     return node
+
+
+@app.route("/new_node/", methods=["POST"])
+def register_new_node():
+    node_address = request.json["node_ip"]
+    if check_if_empty() is True:
+        with open(get_path(), "wb") as fp:
+
+
+
+def get_path():
+    script_dir = os.path.dirname(__file__)
+    file_path = os.path.join(script_dir, "Data/node_id.txt")
+    return file_path
+
+
+def check_if_empty():
+    """
+    Will check if the pickle list is empty
+    :return:
+    """
+    try:
+        with open(get_path(), 'rb') as fp:
+            list_ = pickle.load(fp)
+        return False
+    except EOFError:
+        return True
+    except FileNotFoundError:
+        with open(get_path(), "wb") as fp:
+            empty_list = []
+            pickle.dump(empty_list, fp)
+            return True
 
 
 if __name__ == '__main__':
