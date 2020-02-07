@@ -2,10 +2,13 @@ from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import os
+import json
 import logging
 import pickle
 
 """
+
+
 """
 
 app = Flask(__name__)
@@ -90,12 +93,29 @@ def get_node_with_receipt():
     return node
 
 
-@app.route("/new_node/", methods=["POST"])
+@app.route("/register/new/", methods=["POST"])
 def register_new_node():
     node_address = request.json["node_ip"]
-    if check_if_empty() is True:
-        with open(get_path(), "wb") as fp:
+    if not node_address:
+        return 400, "Not valid"
+    else:
+        if check_if_empty() is False:
+            with open(get_path(), "rb") as fp:
+                list_ = pickle.load(fp)
+        if check_if_empty() is True:
+            list_ = []
+        if node_address not in list_:
+            list_.append(node_address)
+            with open(get_path(), "wb") as fp:
+                pickle.dump(list_, fp)
+        return 200, get_all()
 
+@app.route("/register/exiting/")
+def register_with_exiting_node():
+    r
+    requester_chain = request.json["chain"]
+    if get_all() == requester_chain:
+        return
 
 
 def get_path():
@@ -111,7 +131,7 @@ def check_if_empty():
     """
     try:
         with open(get_path(), 'rb') as fp:
-            list_ = pickle.load(fp)
+            pickle.load(fp)
         return False
     except EOFError:
         return True

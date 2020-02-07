@@ -4,6 +4,9 @@ from threading import Lock
 import uuid
 import os
 import logging
+import pickle
+import requests
+from flask import Flask, request
 import IvarCoin.ProofOfWork
 
 script_dir = os.path.dirname(__file__)
@@ -72,23 +75,45 @@ class ElementContainer(object):
         file_path = os.path.join(script_dir, "Data/data.json")
         return file_path
 
+    def get_node_path(self):
+        script_dir = os.path.dirname(__file__)
+        file_path = os.path.join(script_dir, "Data/node_id.txt")
+        return file_path
+
     def start_up(self):
         """
         Will add the data from the json file to the linked list at startup
+
+
+        Need to get a copy of the chain so from another node
+
         """
         json_path = str(self.get_json_path())
-        try:
-            if self.is_empty() is not True:
-                with open(json_path, "r")as fp:
-                    loaded_json = json.load(fp)
-                    for key, element in loaded_json.items():
+
+        with open(str(self.get_node_path()),"rb") as fp:
+            node_list = pickle.load(fp)
+            if len(node_list) is 0:
+                pass
+            else:
+                for node in node_list:
+                    package = {"ip": request.host_url}
+                    data = requests(node, "/register/new")
+
+                    for key, element in dict(data).items:
                         string = element["Validated_string"]
                         di = {key: element}
                         self.add(di, string, state=True)
-            else:
-                pass
-        except json.JSONDecodeError as e:
-            logging.CRITICAL(e)
+
+
+
+
+            #if self.is_empty() is True:
+             #   with open(str(self.get_node_path), "rb") as fp:
+              #      node_list = pickle.load(fp)
+               #     for node in node_list:
+                #        res = requests(node, "/register/new/")
+                 #       if res.statuscode == 200:
+                  #          pass
 
     @staticmethod
     def genesis():
