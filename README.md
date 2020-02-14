@@ -1,6 +1,6 @@
 # Ivar_coin
 
-* If you want to test the program, run the file "HashApi.py"
+* If you want to test the program, run the file "BlockChainApi.py"
 * To send api calls us the file "StressTest.py" or "GetNodeTest.py"
     * The first time you will most likely have to run the script more then once
 * The "UnitTest.py" will not work if the chain is empty
@@ -15,6 +15,6 @@
   
  https://docs.docker.com/storage/volumes/
  
- ### delete volume 
+ ### Delete volume
 * docker volume ls 
 * docker volume rm (volume name) 

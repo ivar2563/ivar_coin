@@ -4,11 +4,12 @@ from threading import Lock
 import uuid
 import os
 import logging
+import requests
+import pickle
 import IvarCoin.ProofOfWork
 
 script_dir = os.path.dirname(__file__)
 file_path = os.path.join(script_dir, "Data/chain.log")
-
 
 mutex = Lock()
 logging.basicConfig(level=logging.DEBUG,
@@ -64,31 +65,51 @@ class ElementContainer(object):
         self.head = None
         self.tail = None
         self.prev_hash = self.genesis()
-        self.start_up()
-
-    @staticmethod
-    def get_json_path():
-        script_dir = os.path.dirname(__file__)
-        file_path = os.path.join(script_dir, "Data/data.json")
-        return file_path
 
     def start_up(self):
+        if self.check_if_empty() is False:
+            print("x")
+            with open(self.get_path(), "rb") as fp:
+                node_list = pickle.load(fp)
+                for node in node_list:
+                    mutex.acquire()
+                    _ = node + "test_connection/"
+                    connection = _.replace("0.0.0.0", "localhost")
+                    try:
+                        r = requests.get(connection)
+                        status_code = int(r.status_code)
+                        if status_code != 200:
+                            node_list.remove(node)
+                    except Exception:
+                        node_list.remove(node)
+
+                    mutex.release()
+                with open(self.get_path(), "wb") as fp:
+                    pickle.dump(node_list, fp)
+
+
+    @staticmethod
+    def get_path():
+        script_dir = os.path.dirname(__file__)
+        file_path = os.path.join(script_dir, "Data/node_id.txt")
+        return file_path
+
+    def check_if_empty(self):
         """
-        Will add the data from the json file to the linked list at startup
+        Will check if the pickle list is empty
+        :return:
         """
-        json_path = str(self.get_json_path())
         try:
-            if self.is_empty() is not True:
-                with open(json_path, "r")as fp:
-                    loaded_json = json.load(fp)
-                    for key, element in loaded_json.items():
-                        string = element["Validated_string"]
-                        di = {key: element}
-                        self.add(di, string, state=True)
-            else:
-                pass
-        except json.JSONDecodeError as e:
-            logging.CRITICAL(e)
+            with open(self.get_path(), 'rb') as fp:
+                list_ = pickle.load(fp)
+            return False
+        except EOFError:
+            return True
+        except FileNotFoundError:
+            with open(self.get_path(), "wb") as fp:
+                empty_list = []
+                pickle.dump(empty_list, fp)
+                return True
 
     @staticmethod
     def genesis():
@@ -170,6 +191,7 @@ class ElementContainer(object):
         """
         prev_hash = self.prev_hash
         current_hash = self.hash_func(data, string)
+        print(data)
 
         if state is True:
             data_ = data
@@ -198,66 +220,6 @@ class ElementContainer(object):
         for receipt in data_.keys():
             receipt = receipt
         return receipt
-
-    def save(self, data_):
-        """
-        Will save data to a json file for later use
-
-        :param data_:
-        :return:
-        """
-        json_path = str(self.get_json_path())
-
-        mutex.acquire()
-        try:
-            data = data_
-
-            if self.is_empty() is True:
-                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
-                    json.dump(data, feedsjson, indent=4)
-
-            else:
-                with open(json_path, mode='r', encoding='utf-8') as feedsjson:
-                    feeds = json.load(feedsjson)
-                    feed = feeds
-                    x = recurseJsonUpdate(data, feed)
-                    feed.update(x)
-
-                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
-                    json.dump(feed, feedsjson, indent=4)
-
-        except json.JSONDecodeError:
-            try:
-                with open(json_path, mode="w", encoding="utf-8") as feedsjson:
-                    json.dump(feeds, feedsjson)
-            except json.JSONDecodeError:
-                pass
-
-        finally:
-            mutex.release()
-
-    def is_empty(self):
-        """
-        Will check if the json file is empty
-        And return True if it is
-
-        :return:
-        """
-        json_path = str(self.get_json_path())
-        try:
-            with open(json_path, mode="r") as f:
-                try:
-                    len_ = json.loads(f.read())
-                    if len(len_) == 0:
-                        return True
-                    else:
-                        return False
-                except json.JSONDecodeError:
-                    return True
-        except FileNotFoundError:
-            with open(json_path, mode="w", encoding="utf-8") as f:
-                empty_dic = {}
-                json.dump(empty_dic, f)
 
     def get_all(self):
         """
@@ -415,11 +377,13 @@ class ElementContainer(object):
 
 
 x = ElementContainer()
+x.start_up()
 x.validate_chain()
 x.check_ids()
 
 
 class Element(ElementContainer):
+
     def __init__(self):
         super(Element, self).__init__()
 
