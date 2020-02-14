@@ -26,8 +26,11 @@ def add_node():
     if string_response is True:
         response = e.add_element(data, string_)
         data = {"string": string_, "data": data}
+        if check_if_empty() is True:
+            with open(get_path(), "rb") as fp:
+                node_ips = pickle.load(fp)
         for node_ip in node_ips:
-            _ = request(node_ip, "/api/add_node/")
+            _ = request.post(node_ip[0] + "/register/chain", data)
         return response, 200
     else:
         return "The string was already used, or its wrong", 400
@@ -58,23 +61,10 @@ def get_first():
 @app.route("/api/get/last/", methods=["GET"])
 def get_last():
     """
-    Will get the last elemnt in the chain
+    Will get the last element in the chain
     :return:
     """
     x = e.get_last()
-    response = {"data": x}
-    return response
-
-
-@app.route("/api/get/by_index/", methods=["POST"])
-def get_by_index():
-    """
-    Will most likely be removed
-
-    :return:
-    """
-    index = request.json["index"]
-    x = e.get_by_index(index)
     response = {"data": x}
     return response
 
@@ -90,12 +80,52 @@ def get_node_with_receipt():
     return node
 
 
-@app.route("/new_node/", methods=["POST"])
-def register_new_node():
-    node_address = request.json["node_ip"]
-    if check_if_empty() is True:
-        with open(get_path(), "wb") as fp:
+@app.route("/register/new_node/", methods=["POST"])
+def register_new_peer():
+    peer_address = request.json["node_address"]
+    if peer_address:
+        if check_if_empty() is True:
+            node_list = []
+        if check_if_empty() is False:
+            with open(get_path(), "rb") as fp:
+                node_list = pickle.load(fp)
+        if peer_address not in node_list:
+            with open(get_path(), "wb") as fp:
+                node_list.append(peer_address)
+                pickle.dump(node_list, fp)
+            return e.get_all(), 200
+        else:
+            return "Already added", 400
+    else:
+        return "Node address not there", 400
 
+@app.route("/chain_dump/")
+def send_chain():
+    node_address = request.json("node_address")
+    check_if_empty()
+    with open(get_path(), "rb") as fp:
+        node_list = pickle.load(fp)
+        if node_address not in node_list:
+            node_list.append(node_address)
+            with open(get_path(), "wb") as fp:
+                pickle.dump(node_list, fp)
+        return get_all()
+    return ""
+
+
+@app.route("/register/chain")
+def register_new_chain_element():
+    data = request.json["data"]
+    string = request.json["string"]
+    if not data or not string:
+        return 400, "No data/string was found with the request"
+    else:
+        e.add(data, string, state=True)
+
+
+@app.route("/test_connection/")
+def test_connection():
+    return "still a active peer", 200
 
 
 def get_path():
@@ -111,7 +141,7 @@ def check_if_empty():
     """
     try:
         with open(get_path(), 'rb') as fp:
-            list_ = pickle.load(fp)
+            _ = pickle.load(fp)
         return False
     except EOFError:
         return True
