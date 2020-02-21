@@ -61,55 +61,12 @@ class NotIntact(Exception):
 
 
 class ElementContainer(object):
-    def __init__(self):
+    def __init__(self, peer_list):
+        self.peer_list = peer_list
         self.head = None
         self.tail = None
         self.prev_hash = self.genesis()
 
-    def start_up(self):
-        if self.check_if_empty() is False:
-            print("x")
-            with open(self.get_path(), "rb") as fp:
-                node_list = pickle.load(fp)
-                for node in node_list:
-                    mutex.acquire()
-                    _ = node + "test_connection/"
-                    connection = _.replace("0.0.0.0", "localhost")
-                    try:
-                        r = requests.get(connection)
-                        status_code = int(r.status_code)
-                        if status_code != 200:
-                            node_list.remove(node)
-                    except Exception:
-                        node_list.remove(node)
-
-                    mutex.release()
-                with open(self.get_path(), "wb") as fp:
-                    pickle.dump(node_list, fp)
-
-
-    @staticmethod
-    def get_path():
-        script_dir = os.path.dirname(__file__)
-        file_path = os.path.join(script_dir, "Data/node_id.txt")
-        return file_path
-
-    def check_if_empty(self):
-        """
-        Will check if the pickle list is empty
-        :return:
-        """
-        try:
-            with open(self.get_path(), 'rb') as fp:
-                list_ = pickle.load(fp)
-            return False
-        except EOFError:
-            return True
-        except FileNotFoundError:
-            with open(self.get_path(), "wb") as fp:
-                empty_list = []
-                pickle.dump(empty_list, fp)
-                return True
 
     @staticmethod
     def genesis():
@@ -182,20 +139,28 @@ class ElementContainer(object):
         """
         Will add data to the linked list
         and add the hash to the hash list
-        it will also save the data to a json file for later use
 
         :param string:
         :param data:
         :param state:
         :return:
         """
-        prev_hash = self.prev_hash
-        current_hash = self.hash_func(data, string)
+
         print(data)
+        if "prev_hash" in data:
+            state = True
 
         if state is True:
             data_ = data
+            for _, value in data.items():
+                items = value
+            prev_hash = items["prev_hash"]
+            current_hash = items["current_hash"]
+            self.prev_hash = current_hash
+
         if state is False:
+            prev_hash = self.prev_hash
+            current_hash = self.hash_func(data, string)
             data_ = self.add_to_data(data, prev_hash, current_hash, string)
 
         data = data_
@@ -207,19 +172,14 @@ class ElementContainer(object):
             data.next = None
             data.prev = None
             self.tail = data
-            if state is False:
-                self.save(data_)
 
         else:
             self.tail.next = data
             data.prev = self.tail
             self.tail = data
             feed = None
-            if state is False:
-                self.save(data_)
-        for receipt in data_.keys():
-            receipt = receipt
-        return receipt
+        print(data_)
+        return data_
 
     def get_all(self):
         """
@@ -376,16 +336,10 @@ class ElementContainer(object):
         logging.debug("The ids where confirmed")
 
 
-x = ElementContainer()
-x.start_up()
-x.validate_chain()
-x.check_ids()
-
-
 class Element(ElementContainer):
 
-    def __init__(self):
-        super(Element, self).__init__()
+    def __init__(self, peer_list):
+        super(Element, self).__init__(peer_list)
 
     def add_element(self, data, string):
         """

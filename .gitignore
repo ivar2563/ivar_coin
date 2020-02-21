@@ -134,4 +134,4 @@ ignore_git/
 
 data.json
 proof_of_work_list.txt
-node_id.txt
+peer_list.txt
