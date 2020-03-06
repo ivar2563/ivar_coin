@@ -67,7 +67,6 @@ class ElementContainer(object):
         self.tail = None
         self.prev_hash = self.genesis()
 
-
     @staticmethod
     def genesis():
         """
@@ -146,7 +145,6 @@ class ElementContainer(object):
         :return:
         """
 
-        print(data)
         if "prev_hash" in data:
             state = True
 
@@ -178,7 +176,6 @@ class ElementContainer(object):
             data.prev = self.tail
             self.tail = data
             feed = None
-        print(data_)
         return data_
 
     def get_all(self):
