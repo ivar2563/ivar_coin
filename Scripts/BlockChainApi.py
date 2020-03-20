@@ -2,6 +2,8 @@ from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 import os
 import logging
 import pickle
@@ -9,17 +11,10 @@ import socket
 
 """
 """
-peer_list = ["http://0.0.0.0:5000/", "http://0.0.0.0:8081/", "http://0.0.0.0:8082/"]
+peer_list = []
 app = Flask(__name__)
 e = Element(peer_list)
 node_address = ""
-
-
-@app.before_first_request
-def _():
-    global node_address
-    node_address = request.host_url
-    print(node_address)
 
 
 @app.route("/api/add_node/", methods=["POST"])
@@ -95,14 +90,19 @@ def get_node_with_receipt():
     return node
 
 
-@app.route("/register/new_peer/", methods=["POST"])
+@app.route("/register/new_peer/", methods=["GET"])
 def register_new_peer():
-    peer_address = request.json["node_address"]
+    address = request.remote_addr
+    port = request.environ.get('REMOTE_PORT')
+    print(address, "    ", port)
+    peer_address = "http://{}:{}/".format(address, port)
+    print(peer_address)
+
     if peer_address:
-        temp_list = peer_list
         if peer_address not in peer_list:
+            response = {"data": peer_list}
             peer_list.append(peer_address)
-            return temp_list, 200
+            return response, 200
         else:
             return "Already added", 400
     else:
@@ -111,7 +111,6 @@ def register_new_peer():
 
 @app.route("/register/exiting_peer/", methods=["GET"])
 def existing_peer():
-
     own_address = request.host_url
     data = {"node_address": own_address}
     print("peer ", own_address)
@@ -165,7 +164,7 @@ def register_new_chain_element():
     string = request.json["string"]
     address = request.json["node_address"]
     if address not in peer_list:
-        peer_list.apped(address)
+        peer_list.append(address)
     if not data or not string:
         return "No data/string was found with the request", 400
     else:
@@ -186,15 +185,26 @@ def test_connection():
     return "still a active peer", 200
 
 
-def start_up():
-    for peer in peer_list:
+def start_up(startup_peers):
+    for peer in startup_peers:
+        print(peer)
         try:
-            requests.get(peer)
+            if "0.0.0.0" in peer:
+                peer = peer.replace("0.0.0.0", "localhost")
+            r = requests.post(peer + "register/new_peer/")
+            print(r.content)
+            print(r.content)
+            print(type(r.content))
+            print(r.status_code)
+            if int(r.status_code) == 200 and isinstance(r.content, dict):
+                if peer not in peer_list:
+                    peer_list.append(peer)
+                print("TRUE")
+                for a in r.content["data"]:
+                    if a not in startup_peers:
+                        peer_list.append(a)
         except Exception:
+            print("FAile")
             pass
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
-    x = Element()
-    x.validate_chain()
