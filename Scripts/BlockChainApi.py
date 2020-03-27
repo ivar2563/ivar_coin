@@ -203,8 +203,9 @@ def start_up(startup_peers):
                 for a in r.content["data"]:
                     if a not in startup_peers:
                         peer_list.append(a)
-        except Exception:
+        except OSError:
             print("FAile")
             pass
+
 
 
