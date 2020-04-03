@@ -2,7 +2,6 @@ from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
-from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 import os
 import logging
@@ -185,18 +184,27 @@ def test_connection():
     return "still a active peer", 200
 
 
+@app.route("/test2/", methods=["GET"])
+def test2():
+    x = request.host_url
+    return x
+
+
 def start_up(startup_peers):
     for peer in startup_peers:
         print(peer)
         try:
             if "0.0.0.0" in peer:
                 peer = peer.replace("0.0.0.0", "localhost")
-            r = requests.post(peer + "register/new_peer/")
-            print(r.content)
-            print(r.content)
+            x = peer + "register/new_peer/"
+            print(x)
+            r = requests.get(x)
+            print(r.text)
+            print(r.text)
             print(type(r.content))
             print(r.status_code)
             if int(r.status_code) == 200 and isinstance(r.content, dict):
+                logging.debug(peer)
                 if peer not in peer_list:
                     peer_list.append(peer)
                 print("TRUE")
@@ -206,6 +214,3 @@ def start_up(startup_peers):
         except OSError:
             print("FAile")
             pass
-
-
-
