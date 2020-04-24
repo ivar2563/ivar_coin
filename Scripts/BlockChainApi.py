@@ -2,9 +2,11 @@ from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
+import threading
 import atexit
 import os
 import logging
+import time
 import pickle
 import socket
 
@@ -14,6 +16,7 @@ peer_list = []
 app = Flask(__name__)
 e = Element(peer_list)
 node_address = ""
+startup_peers = ["http://0.0.0.0:5000/", "http://0.0.0.0:8081/", "http://0.0.0.0:8082/", "http://0.0.0.0:8080/"]
 
 
 @app.route("/api/add_node/", methods=["POST"])
@@ -191,6 +194,7 @@ def test2():
 
 
 def start_up(startup_peers):
+    time.sleep(10)
     for peer in startup_peers:
         print(peer)
         try:
@@ -214,3 +218,10 @@ def start_up(startup_peers):
         except OSError:
             print("FAile")
             pass
+
+
+if __name__ == "__main__":
+    thread = threading.Thread(target=start_up(startup_peers=startup_peers))
+    thread.start()
+    app.run(host="0.0.0.0")
+    thread.join(timeout=1)
