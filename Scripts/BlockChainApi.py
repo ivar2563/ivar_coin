@@ -203,25 +203,27 @@ def start_up(startup_peers):
             x = peer + "register/new_peer/"
             print(x)
             r = requests.get(x)
-            print(r.text)
-            print(r.text)
-            print(type(r.content))
-            print(r.status_code)
-            if int(r.status_code) == 200 and isinstance(r.content, dict):
+            response = dict(r.json())
+            if int(r.status_code) == 200 and isinstance(response, dict):
                 logging.debug(peer)
+                print(response)
                 if peer not in peer_list:
                     peer_list.append(peer)
                 print("TRUE")
-                for a in r.content["data"]:
+                for a in response["data"]:
                     if a not in startup_peers:
                         peer_list.append(a)
+            else:
+                logging.debug("One of the startup nodes did not respond or it did not work")
         except OSError:
-            print("FAile")
+            logging.critical("Startup failed, node is useless")
             pass
 
 
 if __name__ == "__main__":
     thread = threading.Thread(target=start_up(startup_peers=startup_peers))
     thread.start()
+    print("START")
     app.run(host="0.0.0.0")
     thread.join(timeout=1)
+    print("DONE")
