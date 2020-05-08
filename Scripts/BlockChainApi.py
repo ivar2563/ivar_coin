@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, copy_current_request_context
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
-import threading
+import concurrent.futures
+from threading import Thread
 import atexit
 import os
 import logging
@@ -98,8 +99,6 @@ def register_new_peer():
     port = request.environ.get('REMOTE_PORT')
     print(address, "    ", port)
     peer_address = "http://{}:{}/".format(address, port)
-    print(peer_address)
-
     if peer_address:
         if peer_address not in peer_list:
             response = {"data": peer_list}
@@ -194,7 +193,9 @@ def test2():
 
 
 def start_up(startup_peers):
-    time.sleep(10)
+    # data = {"data": "http://{}:{}/".format(host, port)}
+    # print("data  ", data)
+    print(request.base_url)
     for peer in startup_peers:
         print(peer)
         try:
@@ -203,6 +204,7 @@ def start_up(startup_peers):
             x = peer + "register/new_peer/"
             print(x)
             r = requests.get(x)
+            print("----", r)
             response = dict(r.json())
             if int(r.status_code) == 200 and isinstance(response, dict):
                 logging.debug(peer)
@@ -220,10 +222,19 @@ def start_up(startup_peers):
             pass
 
 
+class FlaskThread(Thread):
+    def run(self):
+        app.run(host='0.0.0.0')
+
+
+def main():
+    server = FlaskThread()
+    server.daemon = True
+    server.start()
+    time.sleep(2)
+    start_up(startup_peers)
+    server.join()
+
+
 if __name__ == "__main__":
-    thread = threading.Thread(target=start_up(startup_peers=startup_peers))
-    thread.start()
-    print("START")
-    app.run(host="0.0.0.0")
-    thread.join(timeout=1)
-    print("DONE")
+    main()
