@@ -15,9 +15,11 @@ import socket
 """
 peer_list = []
 app = Flask(__name__)
+
+
 e = Element(peer_list)
 node_address = ""
-startup_peers = ["http://0.0.0.0:5000/", "http://0.0.0.0:8081/", "http://0.0.0.0:8082/", "http://0.0.0.0:8080/"]
+startup_peers = [""]
 
 
 @app.route("/api/add_node/", methods=["POST"])
@@ -195,7 +197,7 @@ def test2():
 def start_up(startup_peers):
     # data = {"data": "http://{}:{}/".format(host, port)}
     # print("data  ", data)
-    print(request.base_url)
+    #print(request.base_url)
     for peer in startup_peers:
         print(peer)
         try:
@@ -224,10 +226,16 @@ def start_up(startup_peers):
 
 class FlaskThread(Thread):
     def run(self):
-        app.run(host='0.0.0.0')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('localhost', 0))
+        port = sock.getsockname()[1]
+        sock.close()
+        app.run(host='0.0.0.0', port=port)
 
 
 def main():
+    x = input("Input know node: ")
+    startup_peers.append(x)
     server = FlaskThread()
     server.daemon = True
     server.start()
@@ -238,3 +246,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
