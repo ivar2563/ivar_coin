@@ -10,16 +10,16 @@ import logging
 import time
 import pickle
 import socket
+import sys
 
 """
 """
 peer_list = []
 app = Flask(__name__)
 
-
 e = Element(peer_list)
 node_address = ""
-startup_peers = [""]
+startup_peers = []
 
 
 @app.route("/api/add_node/", methods=["POST"])
@@ -95,12 +95,11 @@ def get_node_with_receipt():
     return node
 
 
-@app.route("/register/new_peer/", methods=["GET"])
+@app.route("/register/new_peer/", methods=["POST"])
 def register_new_peer():
-    address = request.remote_addr
-    port = request.environ.get('REMOTE_PORT')
-    print(address, "    ", port)
-    peer_address = "http://{}:{}/".format(address, port)
+
+    peer_address = request.json["data"]
+    print(peer_address)
     if peer_address:
         if peer_address not in peer_list:
             response = {"data": peer_list}
@@ -194,18 +193,24 @@ def test2():
     return x
 
 
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind(('localhost', 0))
+port = sock.getsockname()[1]
+sock.close()
+host = '0.0.0.0'
+
+
 def start_up(startup_peers):
-    # data = {"data": "http://{}:{}/".format(host, port)}
-    # print("data  ", data)
-    #print(request.base_url)
+    data = {"data": "http://{}:{}/".format(host, port)}
     for peer in startup_peers:
         print(peer)
         try:
             if "0.0.0.0" in peer:
                 peer = peer.replace("0.0.0.0", "localhost")
             x = peer + "register/new_peer/"
+            print("sssssssssssssssssssssssssssssss")
             print(x)
-            r = requests.get(x)
+            r = requests.post(x, json=data)
             print("----", r)
             response = dict(r.json())
             if int(r.status_code) == 200 and isinstance(response, dict):
@@ -219,23 +224,25 @@ def start_up(startup_peers):
                         peer_list.append(a)
             else:
                 logging.debug("One of the startup nodes did not respond or it did not work")
-        except OSError:
+        except IndexError:
             logging.critical("Startup failed, node is useless")
             pass
 
 
 class FlaskThread(Thread):
     def run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('localhost', 0))
-        port = sock.getsockname()[1]
-        sock.close()
-        app.run(host='0.0.0.0', port=port)
+        app.run(host=host, port=port)
 
 
 def main():
-    x = input("Input know node: ")
-    startup_peers.append(x)
+    start_addresses = sys.argv
+    start_addresses.remove(start_addresses[0])
+    if len(start_addresses) >= 1:
+        if len(start_addresses) > 1:
+            for address in start_addresses:
+                startup_peers.append(address)
+        else:
+            startup_peers.append(start_addresses[0])
     server = FlaskThread()
     server.daemon = True
     server.start()
@@ -246,4 +253,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
