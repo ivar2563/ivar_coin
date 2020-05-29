@@ -205,27 +205,35 @@ def start_up(startup_peers):
     for peer in startup_peers:
         print(peer)
         try:
+            logging.debug("start")
             if "0.0.0.0" in peer:
                 peer = peer.replace("0.0.0.0", "localhost")
             x = peer + "register/new_peer/"
             print("sssssssssssssssssssssssssssssss")
             print(x)
+            print(data)
+            logging.debug("over requests")
             r = requests.post(x, json=data)
             print("----", r)
+            logging.debug("after requests")
             response = dict(r.json())
+            logging.debug("after jsoinifying")
+            logging.debug("mid")
             if int(r.status_code) == 200 and isinstance(response, dict):
                 logging.debug(peer)
                 print(response)
                 if peer not in peer_list:
                     peer_list.append(peer)
                 print("TRUE")
+                logging.debug("end")
                 for a in response["data"]:
                     if a not in startup_peers:
                         peer_list.append(a)
             else:
                 logging.debug("One of the startup nodes did not respond or it did not work")
-        except IndexError:
+        except OSError:
             logging.critical("Startup failed, node is useless")
+            print("Unexpected error:", sys.exc_info())
             pass
 
 
