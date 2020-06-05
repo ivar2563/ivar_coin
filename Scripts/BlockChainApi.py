@@ -3,12 +3,10 @@ from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
 import concurrent.futures
-from threading import Thread
+from threading import Thread, Timer, Lock
 import atexit
-import os
 import logging
 import time
-import pickle
 import socket
 import sys
 
@@ -18,6 +16,7 @@ peer_list = []
 app = Flask(__name__)
 
 e = Element(peer_list)
+global node_address
 node_address = ""
 startup_peers = []
 
@@ -97,7 +96,6 @@ def get_node_with_receipt():
 
 @app.route("/register/new_peer/", methods=["POST"])
 def register_new_peer():
-
     peer_address = request.json["data"]
     print(peer_address)
     if peer_address:
@@ -209,22 +207,16 @@ def start_up(startup_peers):
             if "0.0.0.0" in peer:
                 peer = peer.replace("0.0.0.0", "localhost")
             x = peer + "register/new_peer/"
-            print("sssssssssssssssssssssssssssssss")
-            print(x)
-            print(data)
             logging.debug("over requests")
             r = requests.post(x, json=data)
-            print("----", r)
             logging.debug("after requests")
             response = dict(r.json())
-            logging.debug("after jsoinifying")
+            logging.debug("after")
             logging.debug("mid")
             if int(r.status_code) == 200 and isinstance(response, dict):
                 logging.debug(peer)
-                print(response)
                 if peer not in peer_list:
                     peer_list.append(peer)
-                print("TRUE")
                 logging.debug("end")
                 for a in response["data"]:
                     if a not in startup_peers:
@@ -237,9 +229,43 @@ def start_up(startup_peers):
             pass
 
 
+def beat():
+    mutex = Lock()
+    mutex.acquire()
+    saved_chain = {}
+    for peer in peer_list:
+        try:
+            test_if_alive = requests.get("http://{data}test/".format(data=peer))
+            if test_if_alive.status_code == 200:
+                remote_chain = requests.get("http://{data}register/exiting_peer/".format(data=peer))
+                x = dict(remote_chain.response)
+                if len(e.get_all()) < int(x["length"]):
+                    # Save chain, then wait for all of the peers in the list to respond
+                    pass
+                if len(e.get_all()) == int(x["length"]):
+                    pass
+            else:
+                peer_list.remove(peer)
+
+        except OSError:
+            logging.debug(sys.exc_info())
+    if saved_chain is not {}:
+        saved_chain
+    mutex.release()
+
+
 class FlaskThread(Thread):
     def run(self):
         app.run(host=host, port=port)
+
+
+def heart_beat():
+    while not heart_beat.cancelled:
+        beat()
+        time.sleep(30)
+
+
+heart_beat.cancelled = False
 
 
 def main():
@@ -256,7 +282,10 @@ def main():
     server.start()
     time.sleep(2)
     start_up(startup_peers)
+    t = Thread(target=heart_beat())
     server.join()
+    t.start()
+    heart_beat.cancelled = True
 
 
 if __name__ == "__main__":
