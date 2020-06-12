@@ -1,12 +1,9 @@
 import time
-import json
 from threading import Lock
 import uuid
 import os
 import logging
-import requests
-import pickle
-import IvarCoin.ProofOfWork
+
 
 script_dir = os.path.dirname(__file__)
 file_path = os.path.join(script_dir, "Data/chain.log")

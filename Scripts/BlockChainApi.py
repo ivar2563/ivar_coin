@@ -1,17 +1,14 @@
-from flask import Flask, request, copy_current_request_context
+from flask import Flask, request
 from IvarCoin.BlockChain import Element
 from IvarCoin.CheckWork import validate_
 import requests
-import concurrent.futures
-from threading import Thread, Timer, Lock
-import atexit
+from threading import Thread, Lock
 import logging
 import time
 import socket
 import sys
 
-"""
-"""
+
 peer_list = []
 app = Flask(__name__)
 
@@ -42,7 +39,7 @@ def add_node():
                 x = requests.post(peer_connection, json=data)
                 logging.debug("")
             except Exception:
-                print("X_X")
+                logging.critical(sys.exc_info())
                 pass
 
         return list(response.keys())[0], 200
@@ -96,6 +93,10 @@ def get_node_with_receipt():
 
 @app.route("/register/new_peer/", methods=["POST"])
 def register_new_peer():
+    """
+    Not in use
+    :return:
+    """
     peer_address = request.json["data"]
     print(peer_address)
     if peer_address:
@@ -111,6 +112,11 @@ def register_new_peer():
 
 @app.route("/register/exiting_peer/", methods=["GET"])
 def existing_peer():
+    """
+    This api function will send a chain dump with the length of the chain, its used to validate nodes
+
+    :return:
+    """
     own_address = request.host_url
     data = {"node_address": own_address}
     print("peer ", own_address)
@@ -142,6 +148,10 @@ def existing_peer():
 
 @app.route("/test/", methods=["GET"])
 def test():
+    """
+    Not in use
+    :return:
+    """
     x = requests.get(request.host_url + "register/exiting_peer/")
     print(x)
     return x.content, 200
@@ -149,6 +159,10 @@ def test():
 
 @app.route("/chain_dump/", methods=["POST"])
 def send_chain():
+    """
+    Not in use
+    :return:
+    """
     node_address = request.remote_addr
     print(node_address)
     if node_address:
@@ -160,6 +174,10 @@ def send_chain():
 
 @app.route("/register/chain/", methods=["POST"])
 def register_new_chain_element():
+    """
+    When a new element is sendt to a node, the add node function will send this api call to every peer in the peer list
+    :return:
+    """
     data = request.json["data"]
     string = request.json["string"]
     address = request.json["node_address"]
@@ -182,11 +200,20 @@ def register_new_chain_element():
 
 @app.route("/test_connection/", methods=["GET"])
 def test_connection():
+    """
+    Is used to check if a node is still alive and able to recive calls, if it dont return a 200 status code
+    it wil be removed from the requesting peer
+    :return:
+    """
     return "still a active peer", 200
 
 
 @app.route("/test2/", methods=["GET"])
 def test2():
+    """
+    Not in use
+    :return:
+    """
     x = request.host_url
     return x
 
@@ -199,6 +226,12 @@ host = '0.0.0.0'
 
 
 def start_up(startup_peers):
+    """
+    First function to run after the api, will get a list of peers from known nodes
+
+    :param startup_peers:
+    :return:
+    """
     data = {"data": "http://{}:{}/".format(host, port)}
     for peer in startup_peers:
         print(peer)
@@ -230,18 +263,37 @@ def start_up(startup_peers):
 
 
 def beat():
+    """
+    Will check chain size with other nodes, if this node is smaller then the other node it will change it out with the a
+    chain that most the other nodes use
+
+    Need to implement a way to recognise know good nodes
+    :return:
+    """
+    logging.debug("heartbeat started")
     mutex = Lock()
     mutex.acquire()
     saved_chain = {}
+    num = 1
     for peer in peer_list:
         try:
-            test_if_alive = requests.get("http://{data}test/".format(data=peer))
+            test_if_alive = requests.get("http://{data}test_connection/".format(data=peer))
             if test_if_alive.status_code == 200:
                 remote_chain = requests.get("http://{data}register/exiting_peer/".format(data=peer))
-                x = dict(remote_chain.response)
+                x = dict(remote_chain.reponse)
                 if len(e.get_all()) < int(x["length"]):
-                    # Save chain, then wait for all of the peers in the list to respond
-                    pass
+
+                    if saved_chain == {}:
+                        saved_chain.update({1: {"chain": x["chain"], "identical": 1}})
+                    else:
+                        for a in range(num):
+                            if saved_chain[a + 1] == x["chain"]:
+                                saved_chain[a + 1]["identical"] += 1
+                                break
+                            else:
+                                num += 1
+                                saved_chain.update({a + 1: {"chain": x["chain"], "identical": 1}})
+                                break
                 if len(e.get_all()) == int(x["length"]):
                     pass
             else:
@@ -249,9 +301,20 @@ def beat():
 
         except OSError:
             logging.debug(sys.exc_info())
-    if saved_chain is not {}:
-        saved_chain
+    if saved_chain != {}:
+        print(saved_chain)
+        current_chain = {}
+        for id in range(num):
+            identical = saved_chain[id + 1]["identical"]
+            chain = saved_chain[id + 1]["chain"]
+            if current_chain == {}:
+                current_chain = {"chain": chain, "identical": identical}
+            if current_chain["identical"] >= identical:
+                current_chain = {"chain": chain, "identical": identical}
+        # replace chain
+
     mutex.release()
+    logging.debug("heartbeat ended")
 
 
 class FlaskThread(Thread):
